@@ -2,7 +2,7 @@
 import requests
 
 def columns():
-    return ','.join(
+    return ','.join([
         'scanned_id',
         'isbn_13',
         'isbn_10',
@@ -15,7 +15,7 @@ def columns():
         'category',
         'all_categories',
         'loc_number',
-    )
+    ])
 
 class Book:
     def __init__(self, scanned_id):
@@ -154,5 +154,12 @@ def book_for_id(isbn):
     book.loc_number = BookClient().fetch_lc_class(isbn)
     return book
 
-id = input()
-print(book_for_id(id).to_csv())
+print(columns())
+identifier = 'placeholder'
+
+while identifier:
+    try:
+        identifier = input()
+    except EOFError:
+        exit(0)
+    print(book_for_id(identifier).to_csv())
