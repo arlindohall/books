@@ -64,40 +64,52 @@ class BookClient:
     def __init__(self):
         self.protocol = 'https'
 
-        self.google_address = 'www.googleapis.com'
+        self.google_host = 'www.googleapis.com'
         self.google_path = '/books/v1/volumes'
 
-        self.loc_address = 'www.loc.gov'
+        self.loc_host = 'www.loc.gov'
         self.loc_path = '/search'
 
+    def __fetch_safe(self, method, host):
+        try:
+            return method()
+        except requests.RequestException:
+            sys.stderr.write(f'Exception while fetching data from {host}')
+
     def fetch_google(self, scanned_id):
-        result = requests.get(
-            f'{self.protocol}://{self.google_address}{self.google_path}?q={scanned_id}'
-        ).json()
+        def go():
+            result = requests.get(
+                f'{self.protocol}://{self.google_host}{self.google_path}?q={scanned_id}'
+            ).json()
 
-        book = Book(scanned_id)
-        if not result['items']:
+            book = Book(scanned_id)
+            if not result['items']:
+                return book
+            else:
+                best_match = result['items'][0]
+
+            book.isbn_13 = get_isbn_13(best_match)
+            book.isbn_10 = get_isbn_10(best_match)
+            book.gbooks_id = get_gbooks_id(best_match)
+            book.gbooks_href = get_gbooks_href(best_match)
+            book.title = get_title(best_match)
+            book.subtitle = get_subtitle(best_match)
+            book.all_authors = get_authors(best_match)
+            book.categories = get_categories(best_match)
+
             return book
-        else:
-            best_match = result['items'][0]
 
-        book.isbn_13 = get_isbn_13(best_match)
-        book.isbn_10 = get_isbn_10(best_match)
-        book.gbooks_id = get_gbooks_id(best_match)
-        book.gbooks_href = get_gbooks_href(best_match)
-        book.title = get_title(best_match)
-        book.subtitle = get_subtitle(best_match)
-        book.all_authors = get_authors(best_match)
-        book.categories = get_categories(best_match)
-
-        return book
+        return self.__fetch_safe(go, self.google_host)
 
     def fetch_lc_class(self, scanned_id):
-        result = requests.get(
-            f'{self.protocol}://{self.loc_address}{self.loc_path}?all=true&fo=json&q={scanned_id}'
-        ).json()
+        def go():
+            result = requests.get(
+                f'{self.protocol}://{self.loc_host}{self.loc_path}?all=true&fo=json&q={scanned_id}'
+            ).json()
 
-        return get_loc_classification(result)
+            return get_loc_classification(result)
+
+        return self.__fetch_safe(go, self.loc_host)
 
 def get_isbn(google_result, matcher):
     v_inf = google_result.get('volumeInfo', {})
