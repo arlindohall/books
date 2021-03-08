@@ -16,6 +16,7 @@ def columns():
         'category',
         'all_categories',
         'loc_number',
+        'loc_href',
     ])
 
 class Book:
@@ -30,6 +31,7 @@ class Book:
         self.all_authors = []
         self.categories = []
         self.loc_number = ''
+        self.loc_href = ''
 
     def to_csv(self) -> str:
         def escape(string):
@@ -57,6 +59,7 @@ class Book:
             category,
             ';'.join(self.categories),
             self.loc_number,
+            self.loc_href,
         ]
         return ','.join(map(escape, fields))
 
@@ -72,7 +75,7 @@ class BookClient:
 
     def __fetch_safe(self, method, host):
         try:
-            sys.stderr.write(f'Fetching data from host={host}')
+            sys.stderr.write(f'Fetching data from host={host}\n')
             return method()
         except requests.RequestException:
             sys.stderr.write(f'Exception while fetching data from host={host}')
@@ -102,13 +105,13 @@ class BookClient:
 
         return self.__fetch_safe(go, self.google_host)
 
-    def fetch_lc_class(self, scanned_id):
+    def fetch_loc_class(self, scanned_id):
         def go():
             result = requests.get(
                 f'{self.protocol}://{self.loc_host}{self.loc_path}?all=true&fo=json&q={scanned_id}'
             ).json()
 
-            return get_loc_classification(result)
+            return result
 
         return self.__fetch_safe(go, self.loc_host)
 
@@ -155,7 +158,7 @@ def get_categories(google_result):
     v_inf = google_result.get('volumeInfo', {})
     return v_inf.get('categories', [])
 
-def get_loc_classification(loc_result):
+def get_loc_number(loc_result):
     res = loc_result.get('results', [])
     if not res:
         return ''
@@ -163,9 +166,14 @@ def get_loc_classification(loc_result):
         res = res[0]
     return res.get('shelf_id')
 
+def get_loc_href(loc_result):
+    return ''
+
 def book_for_id(isbn):
     book = BookClient().fetch_google(isbn)
-    book.loc_number = BookClient().fetch_lc_class(isbn)
+    loc_result = BookClient().fetch_loc_class(isbn)
+    book.loc_number = get_loc_number(loc_result)
+    book.loc_href = get_loc_href(loc_result)
     return book
 
 print(columns())
