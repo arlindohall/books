@@ -167,6 +167,25 @@ def get_loc_number(loc_result):
     return res.get('shelf_id')
 
 def get_loc_href(loc_result):
+    def deep_get_values(d):
+        res = []
+        for value in d.values():
+            if isinstance(value, dict):
+                res.extend(deep_get_values(value))
+            else:
+                res.append(value)
+        return res
+
+    aka = loc_result.get('aka', [])
+    if aka:
+        return aka[0]
+
+    values = deep_get_values(loc_result)
+    for value in values:
+        s = str(value)
+        if s.startswith('http') and ('loc.gov' in s):
+            return s
+
     return ''
 
 def book_for_id(isbn):
