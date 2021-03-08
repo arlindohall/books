@@ -1,5 +1,6 @@
 
 import requests
+import sys
 
 def columns():
     return ','.join([
@@ -161,5 +162,8 @@ while identifier:
     try:
         identifier = input()
     except EOFError:
+        sys.stderr.flush()
         exit(0)
-    print(book_for_id(identifier).to_csv())
+    book_record = book_for_id(identifier).to_csv()
+    print(book_record)
+    sys.stderr.write(f'{book_record}\n')
