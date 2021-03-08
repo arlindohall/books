@@ -72,9 +72,10 @@ class BookClient:
 
     def __fetch_safe(self, method, host):
         try:
+            sys.stderr.write(f'Fetching data from host={host}')
             return method()
         except requests.RequestException:
-            sys.stderr.write(f'Exception while fetching data from {host}')
+            sys.stderr.write(f'Exception while fetching data from host={host}')
 
     def fetch_google(self, scanned_id):
         def go():
