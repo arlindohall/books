@@ -14,5 +14,6 @@ pip install -r requirements.txt
 python scan_books.py >> output.txt
 
 # This creates the actual csv
-python classify_books.py < output.txt >> output.csv
+# Does not append because all data should be in output.txt
+python classify_books.py < output.txt > output.csv
 ```
