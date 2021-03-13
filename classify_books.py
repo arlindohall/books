@@ -1,5 +1,5 @@
 
-import requests
+import json
 import sys
 
 def columns():
@@ -52,6 +52,21 @@ class Book:
         ]
         self.shelf_id = '-'.join(id_parts)
 
+    def set_google_props(self, google_result):
+        self.isbn_13 = get_isbn_13(google_result)
+        self.isbn_10 = get_isbn_10(google_result)
+        self.gbooks_id = get_gbooks_id(google_result)
+        self.gbooks_href = get_gbooks_href(google_result)
+        self.title = get_title(google_result)
+        self.subtitle = get_subtitle(google_result)
+        self.all_authors = get_authors(google_result)
+        self.categories = get_categories(google_result)
+
+        self.set_shelf_id()
+
+    def set_loc_props(self, loc_result):
+        self.loc_number = get_loc_number(loc_result)
+        self.loc_href = get_loc_href(loc_result)
 
     def to_csv(self) -> str:
         def escape(string):
@@ -79,59 +94,6 @@ class Book:
         ]
         return ','.join(map(escape, fields))
 
-class BookClient:
-    def __init__(self):
-        self.protocol = 'https'
-
-        self.google_host = 'www.googleapis.com'
-        self.google_path = '/books/v1/volumes'
-
-        self.loc_host = 'www.loc.gov'
-        self.loc_path = '/search'
-
-    def __fetch_safe(self, method, host):
-        try:
-            sys.stderr.write(f'Fetching data from host={host}\n')
-            return method()
-        except requests.RequestException:
-            sys.stderr.write(f'Exception while fetching data from host={host}')
-
-    def fetch_google(self, scanned_id):
-        def go():
-            result = requests.get(
-                f'{self.protocol}://{self.google_host}{self.google_path}?q={scanned_id}'
-            ).json()
-
-            book = Book(scanned_id)
-            if not result['items']:
-                return book
-            else:
-                best_match = result['items'][0]
-
-            book.isbn_13 = get_isbn_13(best_match)
-            book.isbn_10 = get_isbn_10(best_match)
-            book.gbooks_id = get_gbooks_id(best_match)
-            book.gbooks_href = get_gbooks_href(best_match)
-            book.title = get_title(best_match)
-            book.subtitle = get_subtitle(best_match)
-            book.all_authors = get_authors(best_match)
-            book.categories = get_categories(best_match)
-
-            book.set_shelf_id()
-
-            return book
-
-        return self.__fetch_safe(go, self.google_host)
-
-    def fetch_loc_class(self, scanned_id):
-        def go():
-            result = requests.get(
-                f'{self.protocol}://{self.loc_host}{self.loc_path}?all=true&fo=json&q={scanned_id}'
-            ).json()
-
-            return result
-
-        return self.__fetch_safe(go, self.loc_host)
 
 def get_isbn(google_result, matcher):
     v_inf = google_result.get('volumeInfo', {})
@@ -206,22 +168,27 @@ def get_loc_href(loc_result):
 
     return ''
 
-def book_for_id(isbn):
-    book = BookClient().fetch_google(isbn)
-    loc_result = BookClient().fetch_loc_class(isbn)
-    book.loc_number = get_loc_number(loc_result)
-    book.loc_href = get_loc_href(loc_result)
+def to_book(blob):
+    google_result = blob['google']
+    loc_result = blob['loc']
+
+    book = Book(blob['scanned-id'])
+    book.set_google_props(google_result)
+    book.set_loc_props(loc_result)
+
     return book
 
 print(columns())
-identifier = 'placeholder'
 
-while identifier:
+line = 'placeholder'
+while line:
     try:
-        identifier = input()
+        line = input()
     except EOFError:
         sys.stderr.flush()
         exit(0)
-    book_record = book_for_id(identifier).to_csv()
-    print(book_record)
-    sys.stderr.write(f'{book_record}\n')
+    blob = json.loads(line)
+    book = to_book(blob)
+    csv = book.to_csv()
+    print(csv)
+    sys.stderr.write(f'{csv}\n')
