@@ -5,6 +5,7 @@ import sys
 def columns():
     return ','.join([
         'scanned_id',
+        'shelf_id',
         'isbn_13',
         'isbn_10',
         'gbooks_id',
@@ -22,6 +23,7 @@ def columns():
 class Book:
     def __init__(self, scanned_id):
         self.scanned_id = scanned_id
+        self.shelf_id = ''
         self.isbn_13 = ''
         self.isbn_10 = ''
         self.gbooks_id = ''
@@ -33,30 +35,44 @@ class Book:
         self.loc_number = ''
         self.loc_href = ''
 
+    def set_shelf_id(self):
+        self.category = ''
+        if self.categories:
+            self.category = self.categories[0]
+
+        self.author = ''
+        if self.all_authors:
+            self.author = self.all_authors[0]
+
+        id_parts = [
+            self.category.replace(' ', '')[:4],
+            self.author.replace(' ', '')[:6],
+            self.title.replace(' ', '')[:10],
+            self.scanned_id,
+        ]
+        self.shelf_id = '-'.join(id_parts)
+
+
     def to_csv(self) -> str:
         def escape(string):
             # Escape all double quotes as quad quotes and wrap in double quotes
             return '"' + string.replace("\"", "\"\"") + '"'
 
-        category = ''
-        if self.categories:
-            category = self.categories[0]
-
-        author = ''
-        if self.all_authors:
-            author = self.all_authors[0]
+        if not self.shelf_id:
+            self.set_shelf_id()
 
         fields = [
             self.scanned_id,
+            self.shelf_id,
             self.isbn_13,
             self.isbn_10,
             self.gbooks_id,
             self.gbooks_href,
             self.title,
             self.subtitle,
-            author,
+            self.author,
             ';'.join(self.all_authors),
-            category,
+            self.category,
             ';'.join(self.categories),
             self.loc_number,
             self.loc_href,
@@ -100,6 +116,8 @@ class BookClient:
             book.subtitle = get_subtitle(best_match)
             book.all_authors = get_authors(best_match)
             book.categories = get_categories(best_match)
+
+            book.set_shelf_id()
 
             return book
 
