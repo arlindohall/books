@@ -9,5 +9,10 @@ I run the following command to scan in a bunch of books and append them to my ex
 ```
 source env/bin/activate.fish
 pip install -r requirements.txt
-python scan_books.py >> output.csv
+
+# This saves the scanned json blobs for processing
+python scan_books.py >> output.txt
+
+# This creates the actual csv
+python classify_books.py < output.txt >> output.csv
 ```
