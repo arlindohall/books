@@ -1,6 +1,5 @@
 
 import json
-import sys
 
 def columns():
     return ','.join([
@@ -185,10 +184,8 @@ while line:
     try:
         line = input()
     except EOFError:
-        sys.stderr.flush()
         exit(0)
     blob = json.loads(line)
     book = to_book(blob)
     csv = book.to_csv()
     print(csv)
-    sys.stderr.write(f'{csv}\n')
