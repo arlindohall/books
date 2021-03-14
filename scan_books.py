@@ -28,7 +28,7 @@ class BookClient:
                 f'{self.protocol}://{self.google_host}{self.google_path}?q={scanned_id}'
             ).json()
 
-            if not result['items']:
+            if 'items' not in result or not result['items']:
                 return {}
             else:
                 return result['items'][0]
