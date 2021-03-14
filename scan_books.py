@@ -3,6 +3,8 @@ import json
 import requests
 import sys
 
+from properties import get_title
+
 class BookClient:
     def __init__(self):
         self.protocol = 'https'
@@ -60,4 +62,4 @@ while identifier:
         exit(0)
     book_blob = produce_book_blob(identifier)
     print(json.dumps(book_blob))
-    sys.stderr.write(f'{book_blob}\n')
+    sys.stderr.write(f'Wrote blob for book ({get_title(book_blob["google"])})\n')
