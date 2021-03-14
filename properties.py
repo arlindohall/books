@@ -6,6 +6,8 @@ def get_isbn(google_result, matcher):
 
     if ids:
         isbn = ids.pop()
+    else:
+        isbn = None
 
     if isbn:
         return isbn.get('identifier', '')
