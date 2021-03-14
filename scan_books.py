@@ -26,20 +26,33 @@ class BookClient:
         def go():
             result = requests.get(
                 f'{self.protocol}://{self.google_host}{self.google_path}?q={scanned_id}'
-            ).json()
+            )
 
-            if 'items' not in result or not result['items']:
+            try:
+                result = result.json()
+            except JSONDecodeError:
+                result = {}
+
+            result = result.get('items', [])
+            if not result:
                 return {}
             else:
-                return result['items'][0]
+                return result[0]
 
         return self.__fetch_safe(go, self.google_host)
 
     def fetch_loc_class(self, scanned_id):
         def go():
-            return requests.get(
+            result = requests.get(
                 f'{self.protocol}://{self.loc_host}{self.loc_path}?all=true&fo=json&q={scanned_id}'
-            ).json()
+            )
+
+            try:
+                result = result.json()
+            except JSONDecodeError:
+                result = {}
+
+            return result
 
         return self.__fetch_safe(go, self.loc_host)
 
