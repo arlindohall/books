@@ -5,6 +5,8 @@ import sys
 
 from properties import get_title
 
+OUTPUT_FILE = 'content/blobs.txt'
+
 class BookClient:
     def __init__(self):
         self.protocol = 'https'
@@ -30,7 +32,7 @@ class BookClient:
 
             try:
                 result = result.json()
-            except JSONDecodeError:
+            except json.decoder.JSONDecodeError:
                 result = {}
 
             result = result.get('items', [])
@@ -49,7 +51,7 @@ class BookClient:
 
             try:
                 result = result.json()
-            except JSONDecodeError:
+            except json.decoder.JSONDecodeError:
                 result = {}
 
             return result
@@ -66,13 +68,33 @@ def produce_book_blob(scan):
         'loc': loc_result,
     }
 
+def read_all_blobs():
+    with open(OUTPUT_FILE, 'r') as blobs:
+        lines = blobs.readlines()
+        return [json.loads(s) for s in lines]
+
+def complete(content):
+    with open(OUTPUT_FILE, 'w') as blobs:
+        lines = [json.dumps(c) + '\n' for c in content]
+        blobs.writelines(lines)
+
+blobs = read_all_blobs()
+ids = [blob.get('scanned-id') for blob in blobs]
+
 identifier = 'placeholder'
 while identifier:
     try:
         identifier = input()
     except EOFError:
+        complete(blobs)
         sys.stderr.flush()
         exit(0)
-    book_blob = produce_book_blob(identifier)
-    print(json.dumps(book_blob))
-    sys.stderr.write(f'Wrote blob for book ({get_title(book_blob["google"])})\n')
+
+    if identifier in ids:
+        sys.stderr.write(f'Already found identifier in blobs file id={identifier}\n')
+        continue
+    else:
+        book_blob = produce_book_blob(identifier)
+        blobs.append(book_blob)
+        ids.append(identifier)
+        sys.stderr.write(f'Wrote blob for book ({get_title(book_blob["google"])})\n')
