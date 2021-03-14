@@ -43,7 +43,7 @@ class BookClient:
 
         return self.__fetch_safe(go, self.google_host)
 
-    def fetch_loc_class(self, scanned_id):
+    def fetch_loc(self, scanned_id):
         def go():
             result = requests.get(
                 f'{self.protocol}://{self.loc_host}{self.loc_path}?all=true&fo=json&q={scanned_id}'
@@ -60,7 +60,7 @@ class BookClient:
 
 def produce_book_blob(scan):
     google_result = BookClient().fetch_google(scan)
-    loc_result = BookClient().fetch_loc_class(scan)
+    loc_result = BookClient().fetch_loc(scan)
 
     return {
         'scanned-id': scan,
