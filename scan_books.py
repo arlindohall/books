@@ -79,7 +79,7 @@ def complete(content):
         blobs.writelines(lines)
 
 blobs = read_all_blobs()
-ids = [blob.get('scanned-id') for blob in blobs]
+blobs_by_id = {blob['scanned-id']: blob for blob in blobs}
 
 identifier = 'placeholder'
 while identifier:
@@ -90,9 +90,13 @@ while identifier:
         sys.stderr.flush()
         exit(0)
 
-    if identifier in ids:
+    if identifier in blobs_by_id:
         sys.stderr.write(f'Already found identifier in blobs file id={identifier}\n')
-        continue
+        blob = blobs_by_id[identifier]
+        if not blob.get('google'):
+            blob['google'] = BookClient().fetch_google(identifier)
+        if not blob.get('loc'):
+            blob['loc'] = BookClient().fetch_loc(identifier)
     else:
         book_blob = produce_book_blob(identifier)
         blobs.append(book_blob)
