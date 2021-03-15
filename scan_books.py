@@ -80,13 +80,14 @@ def complete(content):
 
 blobs = read_all_blobs()
 blobs_by_id = {blob['scanned-id']: blob for blob in blobs}
+del blobs
 
 identifier = 'placeholder'
 while identifier:
     try:
         identifier = input()
     except EOFError:
-        complete(blobs)
+        complete(blobs_by_id.values())
         sys.stderr.flush()
         exit(0)
 
@@ -99,6 +100,5 @@ while identifier:
             blob['loc'] = BookClient().fetch_loc(identifier)
     else:
         book_blob = produce_book_blob(identifier)
-        blobs.append(book_blob)
-        ids.append(identifier)
+        blobs_by_id[identifier] = book_blob
         sys.stderr.write(f'Wrote blob for book ({get_title(book_blob["google"])})\n')
