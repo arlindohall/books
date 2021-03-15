@@ -21,8 +21,8 @@ class BookClient:
         try:
             sys.stderr.write(f'Fetching data from host={host}\n')
             return method()
-        except requests.RequestException:
-            sys.stderr.write(f'Exception while fetching data from host={host}')
+        except requests.RequestException as err:
+            sys.stderr.write(f'Exception while fetching data from host={host} err={err}\n')
 
     def fetch_google(self, scanned_id):
         def go():
@@ -74,6 +74,7 @@ def read_all_blobs():
         return [json.loads(s) for s in lines]
 
 def complete(content):
+    sys.stderr.write('Writing blob back to output file...\n')
     with open(OUTPUT_FILE, 'w') as blobs:
         lines = [json.dumps(c) + '\n' for c in content]
         blobs.writelines(lines)
