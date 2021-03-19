@@ -69,7 +69,7 @@ class Book:
         self.isbn_13 = get_isbn_13(google_result)
         self.isbn_10 = get_isbn_10(google_result)
         self.gbooks_id = get_gbooks_id(google_result)
-        self.gbooks_href = get_gbooks_href(google_result)
+        self.gbooks_href = get_gbooks_href(self.scanned_id)
         self.title = get_title(google_result)
         self.subtitle = get_subtitle(google_result)
         self.all_authors = get_authors(google_result)
@@ -79,7 +79,7 @@ class Book:
 
     def set_loc_props(self, loc_result):
         self.loc_number = get_loc_number(loc_result)
-        self.loc_href = get_loc_href(loc_result)
+        self.loc_href = get_loc_href(self.scanned_id)
 
     def to_csv(self) -> str:
         def escape(string):
