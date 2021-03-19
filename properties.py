@@ -3,6 +3,7 @@ def get_isbn(google_result, matcher):
     v_inf = google_result.get('volumeInfo', {})
     ids = v_inf.get('industryIdentifiers', [])
     ids = filter(matcher, ids)
+    ids = list(ids)
 
     if ids:
         isbn = ids.pop()
