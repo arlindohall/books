@@ -27,7 +27,7 @@ class BookClient:
     def fetch_google(self, scanned_id):
         def go():
             result = requests.get(
-                f'{self.protocol}://{self.google_host}{self.google_path}?q={scanned_id}'
+                f'{self.protocol}://{self.google_host}{self.google_path}?q=isbn:{scanned_id}'
             )
 
             try:
